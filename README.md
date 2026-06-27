@@ -119,34 +119,19 @@ flowchart TD
 
 ## Design Patterns
 
-**Singleton + ThreadLocal** — `DriverManager` holds one `AndroidDriver` per thread via `ThreadLocal`. The session is created once before the first test, reused across all 15 tests, and quit only in `@AfterSuite`. This avoids the 10–20 second Appium session startup cost on every test and keeps parallel execution safe without shared driver state.
+- **Singleton + ThreadLocal** — `DriverManager` holds one `AndroidDriver` per thread via `ThreadLocal`. The session is created once before the first test, reused across all 15 tests, and quit only in `@AfterSuite`. This avoids the 10–20 second Appium session startup cost on every test and keeps parallel execution safe without shared driver state.
 
-**Page Object Model** — Every screen has a dedicated class in `pages/` owning all locators and interactions. Page Factory is intentionally not used — it caches element references at init time and causes `StaleElementReferenceException` when app state changes. Every method resolves elements fresh against the live DOM.
+- **Page Object Model** — Every screen has a dedicated class in `pages/` owning all locators and interactions. Page Factory is intentionally not used — it caches element references at init time and causes `StaleElementReferenceException` when app state changes. Every method resolves elements fresh against the live DOM.
 
-**Template Method** — `BasePage` is abstract and defines the contract: `waitForPageLoad()` must be implemented by every concrete page. Shared helpers (`click`, `type`, `getText`, `isDisplayed`) live in the base class so each page gets them for free while only implementing the screen-specific wait logic.
+- **Template Method** — `BasePage` is abstract and defines the contract: `waitForPageLoad()` must be implemented by every concrete page. Shared helpers (`click`, `type`, `getText`, `isDisplayed`) live in the base class so each page gets them for free while only filling in the screen-specific wait logic.
 
-**Fluent Interface** — Page methods return `this` or the next page object, so tests read as natural language:
-```java
-loginPage
-    .enterUsername(USERS.getText("validUser", "username"))
-    .enterPassword(USERS.getText("validUser", "password"))
-    .tapLogin();
-```
+- **Fluent Interface** — Page methods return `this` or the next page object, so tests read as natural language: `loginPage.enterUsername(u).enterPassword(p).tapLogin()`.
 
-**Factory Method** — Navigation methods construct, wait for, and return the next page. The caller never instantiates a page directly:
-```java
-public CheckoutInfoPage proceedToCheckout() {
-    gestureUtils.swipeToElement(CHECKOUT_BUTTON, 3);
-    click(CHECKOUT_BUTTON);
-    CheckoutInfoPage page = new CheckoutInfoPage(driver);
-    page.waitForPageLoad();
-    return page;
-}
-```
+- **Factory Method** — Navigation methods construct, wait for, and return the next page. The caller never instantiates a page directly — `proceedToCheckout()` builds the `CheckoutInfoPage`, calls `waitForPageLoad()`, and returns it ready to use.
 
-**Data-Driven** — All test inputs live in `users.json` and `checkout.json`. `JsonDataReader` wraps Jackson with a fluent key-path API so test classes contain zero hardcoded strings: `USERS.getText("errorMessages", "lockedOut")`.
+- **Data-Driven** — All test inputs live in `users.json` and `checkout.json`. `JsonDataReader` wraps Jackson with a fluent key-path API so test classes contain zero hardcoded strings: `USERS.getText("errorMessages", "lockedOut")`.
 
-**Strategy — ANR Handling** — `BasePage.waitForVisibleDismissingDialogs()` applies a two-attempt strategy: primary wait → catch timeout → dismiss ANR "Wait" dialog → retry. This is composed into every `waitForPageLoad()` call automatically, so individual tests need no ANR awareness.
+- **Strategy — ANR Handling** — `BasePage.waitForVisibleDismissingDialogs()` applies a two-attempt strategy: primary wait → catch timeout → dismiss ANR "Wait" dialog → retry. Composed into every `waitForPageLoad()` call automatically, so individual tests need no ANR awareness.
 
 ---
 
