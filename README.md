@@ -119,15 +119,34 @@ flowchart TD
 
 ## Design Patterns
 
-| Pattern | Where Used | Purpose |
-|---|---|---|
-| **Singleton + ThreadLocal** | `DriverManager` | One `AndroidDriver` per thread — session created once, reused across all 15 tests; safe for parallel execution |
-| **Page Object Model** | `pages/*.java` — 7 page classes | Separates locators and interactions from assertions; a locator change requires updating only one class |
-| **Template Method** | `BasePage` (abstract) | Defines the contract (`waitForPageLoad()` abstract) and provides shared helpers; concrete pages fill in the details |
-| **Fluent Interface** | Page navigation methods | Methods return `this` or next page — tests read as natural language (`loginPage.enterUsername(u).enterPassword(p).tapLogin()`) |
-| **Factory Method** | `proceedToCheckout()`, `goToCart()` | Caller never instantiates the next page — navigation methods construct, wait for, and return the next page object |
-| **Data-Driven** | `data/*.json` + `JsonDataReader` | All inputs externalised; zero hardcoded strings in any test class |
-| **Strategy — ANR Handling** | `BasePage.waitForVisibleDismissingDialogs()` | Primary wait → catch → dismiss ANR dialog → retry; applied automatically at page-load boundaries |
+**Singleton + ThreadLocal** — `DriverManager` holds one `AndroidDriver` per thread via `ThreadLocal`. The session is created once before the first test, reused across all 15 tests, and quit only in `@AfterSuite`. This avoids the 10–20 second Appium session startup cost on every test and keeps parallel execution safe without shared driver state.
+
+**Page Object Model** — Every screen has a dedicated class in `pages/` owning all locators and interactions. Page Factory is intentionally not used — it caches element references at init time and causes `StaleElementReferenceException` when app state changes. Every method resolves elements fresh against the live DOM.
+
+**Template Method** — `BasePage` is abstract and defines the contract: `waitForPageLoad()` must be implemented by every concrete page. Shared helpers (`click`, `type`, `getText`, `isDisplayed`) live in the base class so each page gets them for free while only implementing the screen-specific wait logic.
+
+**Fluent Interface** — Page methods return `this` or the next page object, so tests read as natural language:
+```java
+loginPage
+    .enterUsername(USERS.getText("validUser", "username"))
+    .enterPassword(USERS.getText("validUser", "password"))
+    .tapLogin();
+```
+
+**Factory Method** — Navigation methods construct, wait for, and return the next page. The caller never instantiates a page directly:
+```java
+public CheckoutInfoPage proceedToCheckout() {
+    gestureUtils.swipeToElement(CHECKOUT_BUTTON, 3);
+    click(CHECKOUT_BUTTON);
+    CheckoutInfoPage page = new CheckoutInfoPage(driver);
+    page.waitForPageLoad();
+    return page;
+}
+```
+
+**Data-Driven** — All test inputs live in `users.json` and `checkout.json`. `JsonDataReader` wraps Jackson with a fluent key-path API so test classes contain zero hardcoded strings: `USERS.getText("errorMessages", "lockedOut")`.
+
+**Strategy — ANR Handling** — `BasePage.waitForVisibleDismissingDialogs()` applies a two-attempt strategy: primary wait → catch timeout → dismiss ANR "Wait" dialog → retry. This is composed into every `waitForPageLoad()` call automatically, so individual tests need no ANR awareness.
 
 ---
 
@@ -371,12 +390,12 @@ emulator -avd Pixel_6a_Edited_API_34 \
 ### Prerequisites
 
 ```bash
-java -version              # Java 17+
-mvn -version               # Maven 3.x
-echo $ANDROID_HOME         # Android SDK path
-emulator -list-avds        # Confirm AVD exists
-appium --version           # Appium 2.0+
-appium driver list --installed  # UiAutomator2 listed
+java -version                       # Java 17+
+mvn -version                        # Maven 3.x
+echo $ANDROID_HOME                  # Android SDK path
+emulator -list-avds                 # Confirm AVD exists
+appium --version                    # Appium 2.0+
+appium driver list --installed      # UiAutomator2 listed
 ```
 
 ### Configuration
@@ -399,40 +418,53 @@ noReset=true
 newCommandTimeout=3600
 ```
 
-### Step-by-Step
+### Start Emulator & Appium
 
 ```bash
 # Terminal 1 — start emulator
 emulator -avd <your-avd-name> -no-snapshot-load -gpu host -no-boot-anim -no-audio -memory 1536 &
 
-# Wait for full boot (sys.boot_completed + package manager ready)
+# Wait for full boot
 until [ "$(adb shell getprop sys.boot_completed 2>/dev/null)" = "1" ]; do sleep 3; done && echo "Boot complete"
 
-# Terminal 2 — start Appium
+# Terminal 2 — start Appium server
 appium
-
-# Terminal 3 — run tests
-cd appium-java-project
-
-mvn clean test                                         # full suite (15 tests)
-mvn clean test -DsuiteXmlFile=testng-smoke.xml         # smoke (5 tests)
-mvn clean test -DsuiteXmlFile=testng-regression.xml    # regression (10 tests)
-
-# View Allure report
-mvn allure:serve
 ```
 
-### Test Suites
+### Run Tests
 
-| Suite | Groups | Tests | Estimated Time |
+```bash
+# Smoke suite — 5 critical-path tests, fastest feedback
+mvn clean test -DsuiteXmlFile=testng-smoke.xml
+
+# Regression suite — 10 tests covering errors, sorting, cart, checkout validation
+mvn clean test -DsuiteXmlFile=testng-regression.xml
+
+# Full suite — all 15 tests
+mvn clean test
+```
+
+### Generate & View Allure Report
+
+```bash
+# Open interactive report in browser (recommended)
+mvn allure:serve
+
+# Generate static HTML report
+mvn allure:report
+open target/site/allure-maven-plugin/index.html
+
+# Using Allure CLI directly
+allure serve target/allure-results
+```
+
+### Test Suite Reference
+
+| Suite | Tests | Estimated Time | What's Covered |
 |---|---|---|---|
-| `testng.xml` | all | 15 | ~35–45 min |
-| `testng-smoke.xml` | smoke | 5 | ~10–15 min |
-| `testng-regression.xml` | regression | 10 | ~20–30 min |
-
-**Smoke (5):** TC1 Login · TC4 Inventory Loads · TC7 Add to Cart · TC14 Full Checkout · TC15 Logout
-
-**Regression (10):** TC2–3 Login errors · TC5–6 Sorting · TC8–9 Cart operations · TC10–11 Cart page · TC12–13 Checkout validation
+| `testng-smoke.xml` | 5 | ~10–15 min | TC1 Login · TC4 Inventory · TC7 Add to Cart · TC14 Full Checkout · TC15 Logout |
+| `testng-regression.xml` | 10 | ~20–30 min | TC2–3 Login errors · TC5–6 Sorting · TC8–9 Cart ops · TC10–11 Cart page · TC12–13 Checkout validation |
+| `testng.xml` | 15 | ~35–45 min | All of the above |
 
 ### ADB Troubleshooting
 
@@ -445,7 +477,7 @@ adb uninstall io.appium.uiautomator2.server
 adb uninstall io.appium.uiautomator2.server.test
 adb uninstall io.appium.settings
 
-# Check what's on screen
+# Check what's currently on screen
 adb shell dumpsys window | grep mCurrentFocus
 
 # Dismiss ANR dialog manually
