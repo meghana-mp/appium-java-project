@@ -37,3 +37,6 @@ logs/
 # Local machine config — contains device paths and Appium server URL.
 # Copy config.properties.template, rename to config.properties, and fill in your values.
 src/test/resources/config.properties
+
+# Internal framework reference doc — not for public repo
+FRAMEWORK_DOCUMENTATION.md
