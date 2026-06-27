@@ -1,0 +1,27 @@
+# Copy this file to config.properties and fill in your local values.
+# config.properties is excluded from version control (.gitignore).
+
+# Appium server (default local)
+appiumServerUrl=http://127.0.0.1:4723
+
+# Device
+platformName=Android
+automationName=UiAutomator2
+deviceName=emulator-5554
+
+# App under test
+appPackage=com.swaglabsmobileapp
+appActivity=com.swaglabsmobileapp.MainActivity
+# Absolute path to the APK on your machine
+appPath=/path/to/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk
+
+# Session behaviour
+noReset=true
+newCommandTimeout=3600
+
+# Capabilities
+ensureWebviewsHavePages=true
+nativeWebScreenshot=true
+connectHardwareKeyboard=true
+implicitWaitSeconds=0
+explicitWaitSeconds=15

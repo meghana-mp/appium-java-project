@@ -1,0 +1,30 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+  SMOKE SUITE — 5 tests, ~10–15 min
+  Critical-path sanity check: login, inventory load, add-to-cart, full checkout, logout.
+  Run after each build or deployment to confirm core flows are not broken.
+
+  Usage: mvn clean test -DsuiteXmlFile=testng-smoke.xml
+-->
+<suite name="SauceLabs Mobile — Smoke" verbose="1" parallel="none">
+
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.meghana.appium.listeners.AllureEnvironmentListener"/>
+    </listeners>
+
+    <test name="Smoke Tests">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.meghana.appium.tests.LoginTest"/>
+            <class name="com.meghana.appium.tests.InventoryTest"/>
+            <class name="com.meghana.appium.tests.CheckoutTest"/>
+            <class name="com.meghana.appium.tests.NavigationTest"/>
+        </classes>
+    </test>
+
+</suite>

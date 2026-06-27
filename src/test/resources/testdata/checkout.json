@@ -1,0 +1,21 @@
+{
+  "validCheckout": {
+    "firstName": "Test",
+    "lastName": "User",
+    "postalCode": "10001"
+  },
+  "errorMessages": {
+    "firstNameRequired": "First Name is required",
+    "lastNameRequired": "Last Name is required",
+    "postalCodeRequired": "Postal Code is required"
+  },
+  "products": {
+    "item1": "Sauce Labs Backpack",
+    "item2": "Sauce Labs Bike Light",
+    "item3": "Sauce Labs Bolt T-Shirt"
+  },
+  "completionPage": {
+    "header": "THANK YOU FOR YOUR ORDER",
+    "dispatchedMessage": "Your order has been dispatched"
+  }
+}

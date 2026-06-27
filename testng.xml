@@ -1,0 +1,41 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+  FULL SUITE — all 15 tests, ~35–45 min
+  Runs every test across every feature area. Use for complete pre-release validation.
+
+  Usage:
+    mvn clean test                                      # full suite (default)
+    mvn clean test -DsuiteXmlFile=testng-smoke.xml      # smoke only
+    mvn clean test -DsuiteXmlFile=testng-regression.xml # regression only
+
+  Report:
+    mvn allure:serve          # opens live report in browser
+    mvn allure:report         # generates static HTML report in target/site/allure-maven-plugin/
+-->
+<suite name="SauceLabs Mobile — Full Suite" verbose="1" parallel="none">
+
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.meghana.appium.listeners.AllureEnvironmentListener"/>
+    </listeners>
+
+    <test name="Full Test Suite">
+        <groups>
+            <run>
+                <include name="login"/>
+                <include name="inventory"/>
+                <include name="cart"/>
+                <include name="checkout"/>
+                <include name="navigation"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.meghana.appium.tests.LoginTest"/>
+            <class name="com.meghana.appium.tests.InventoryTest"/>
+            <class name="com.meghana.appium.tests.CartTest"/>
+            <class name="com.meghana.appium.tests.CheckoutTest"/>
+            <class name="com.meghana.appium.tests.NavigationTest"/>
+        </classes>
+    </test>
+
+</suite>

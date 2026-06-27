@@ -1,0 +1,39 @@
+# Maven build output
+target/
+
+# Allure (if generated outside target/)
+allure-results/
+allure-report/
+
+# Allure CLI binary (downloaded locally by allure serve/generate)
+.allure/
+
+# Local screenshots captured during test runs
+screenshots/
+logs/
+
+# Java
+*.class
+*.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+
+# Editors
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Local machine config — contains device paths and Appium server URL.
+# Copy config.properties.template, rename to config.properties, and fill in your values.
+src/test/resources/config.properties

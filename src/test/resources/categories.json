@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Product Defects",
+    "matchedStatuses": ["failed"],
+    "messageRegex": ".*AssertionError.*"
+  },
+  {
+    "name": "App Not Responding (ANR)",
+    "matchedStatuses": ["failed", "broken"],
+    "messageRegex": ".*(ANR|Application Not Responding|app crash).*"
+  },
+  {
+    "name": "Element Not Found / Timeout",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*(NoSuchElementException|TimeoutException|no such element|Element not found).*"
+  },
+  {
+    "name": "Driver / Connection Issues",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*(WebDriverException|connection refused|Unable to connect|session.*not.*created).*"
+  },
+  {
+    "name": "Skipped Tests",
+    "matchedStatuses": ["skipped"],
+    "messageRegex": ".*"
+  }
+]
